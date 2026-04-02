@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls d:/vscode/personal/demo_app/.env*)",
+      "Bash(npx expo:*)"
+    ]
+  }
+}
