@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Dimensions, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import BannerCarousel from '@/components/BannerCarousel';
 import { Banner, NewsItem, fetchBanners, fetchNews } from '@/services/api';
+import { logError, logInfo } from '@/services/logs';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const BANNER_HEIGHT = SCREEN_HEIGHT / 3;
@@ -13,12 +14,29 @@ export default function Screen1() {
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
-    const [bannersData, newsData] = await Promise.allSettled([
-      fetchBanners(),
-      fetchNews(),
-    ]);
-    setBanners(bannersData.status === 'fulfilled' ? bannersData.value : []);
-    setNews(newsData.status === 'fulfilled' ? newsData.value : []);
+    logInfo('Начата загрузка данных главного экрана');
+
+    const [bannersData, newsData] = await Promise.allSettled([fetchBanners(), fetchNews()]);
+
+    if (bannersData.status === 'fulfilled') {
+      setBanners(bannersData.value);
+      logInfo('Баннеры загружены', { count: bannersData.value.length });
+    } else {
+      setBanners([]);
+      logError('Не удалось загрузить баннеры', {
+        message: bannersData.reason instanceof Error ? bannersData.reason.message : String(bannersData.reason),
+      });
+    }
+
+    if (newsData.status === 'fulfilled') {
+      setNews(newsData.value);
+      logInfo('Новости загружены', { count: newsData.value.length });
+    } else {
+      setNews([]);
+      logError('Не удалось загрузить новости', {
+        message: newsData.reason instanceof Error ? newsData.reason.message : String(newsData.reason),
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -26,9 +44,11 @@ export default function Screen1() {
   }, [loadData]);
 
   const onRefresh = useCallback(async () => {
+    logInfo('Пользователь запустил обновление списка');
     setRefreshing(true);
     await loadData();
     setRefreshing(false);
+    logInfo('Обновление списка завершено');
   }, [loadData]);
 
   return (
@@ -51,7 +71,12 @@ export default function Screen1() {
           <View key={item.id}>
             <Pressable
               style={styles.newsItem}
-              onPress={() =>
+              onPress={() => {
+                logInfo('Пользователь открыл новость', {
+                  id: item.id,
+                  name: item.name,
+                });
+
                 router.push({
                   pathname: '/news/[id]',
                   params: {
@@ -61,8 +86,8 @@ export default function Screen1() {
                     image: item.image ?? '',
                     updated_at: item.updated_at,
                   },
-                })
-              }
+                });
+              }}
             >
               <Text style={styles.newsName}>{item.name}</Text>
               <Text style={styles.newsDescription} numberOfLines={2}>

@@ -1,50 +1,106 @@
-# Welcome to your Expo app 👋
+# Demo App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Мобильное приложение на Expo + React Native + TypeScript с файловой навигацией через `expo-router`.
 
-## Get started
+Сейчас в проекте есть:
+- экран новостей с баннерами и списком новостей
+- экран деталей новости
+- экран карты с точками, загружаемыми с бэкенда
+- экран внутренних логов приложения
+- вспомогательный demo-экран
 
-1. Install dependencies
+## Стек
 
-   ```bash
-   npm install
-   ```
+- Expo SDK 54
+- React 19
+- React Native 0.81
+- TypeScript
+- expo-router
+- expo-image
+- react-native-maps
 
-2. Start the app
+## Запуск проекта
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+1. Установить зависимости:
 
 ```bash
+npm install
+```
+
+2. Указать API-базу в `.env`:
+
+```env
+EXPO_PUBLIC_API_BASE_URL=http://YOUR_BACKEND_URL
+```
+
+3. Запустить приложение:
+
+```bash
+npx expo start
+```
+
+Дополнительно:
+
+```bash
+npm run android
+npm run ios
+npm run web
+```
+
+## API, которые использует приложение
+
+- `GET /api/v1/banners`
+- `GET /api/v1/news`
+- `GET /api/v1/coordinates`
+
+Ожидаемый формат координат:
+
+```json
+[
+  {
+    "lat": 33,
+    "lon": 43,
+    "name": "Point name",
+    "description": "Point description"
+  }
+]
+```
+
+Если `id` не приходит, клиент сгенерирует его сам по индексу элемента.
+
+## Карта
+
+Экран карты доступен отдельной кнопкой в нижнем tab bar.
+
+Поведение карты:
+- точки загружаются при старте приложения
+- на карте отображаются маркеры по `lat/lon`
+- по нажатию на маркер открывается карточка с названием и описанием точки
+- по нажатию на свободную область карты карточка скрывается
+- есть ручная кнопка обновления точек
+
+## Структура проекта
+
+- `app/_layout.tsx` — корневой layout и ранняя загрузка координат
+- `app/(tabs)/_layout.tsx` — нижние табы приложения
+- `app/(tabs)/index.tsx` — главный экран новостей
+- `app/(tabs)/map.tsx` — экран карты
+- `app/(tabs)/logs.tsx` — экран логов
+- `app/news/[id].tsx` — экран деталей новости
+- `services/api.ts` — API-слой
+- `services/coordinates-store.ts` — store координат карты
+- `services/logs.ts` — in-memory логгер
+- `services/global-banner.ts` — глобальный banner ошибок
+
+## Полезные команды
+
+```bash
+npm run lint
 npm run reset-project
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Примечания
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Для API используется переменная окружения `EXPO_PUBLIC_API_BASE_URL`.
+- Ошибки запросов логируются и показываются через глобальный banner.
+- Детали новости открываются без повторного API-запроса, через параметры навигации.

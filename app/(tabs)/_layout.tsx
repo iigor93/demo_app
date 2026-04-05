@@ -1,5 +1,5 @@
-import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
 
 export default function TabLayout() {
   return (
@@ -7,7 +7,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Экран 1',
+          title: 'Новости',
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
@@ -20,6 +20,25 @@ export default function TabLayout() {
           title: 'Экран 2',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="star" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="map"
+        options={{
+          title: 'Карта',
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="map-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="logs"
+        options={{
+          title: 'Логи',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="document-text-outline" size={size} color={color} />
           ),
         }}
       />
