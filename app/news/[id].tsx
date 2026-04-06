@@ -1,8 +1,6 @@
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
-import { useEffect } from 'react';
 import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { logInfo } from '@/services/logs';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const IMAGE_HEIGHT = SCREEN_HEIGHT / 4;
@@ -19,21 +17,13 @@ function formatDate(iso: string): string {
 }
 
 export default function NewsDetail() {
-  const { id, name, description, image, updated_at } = useLocalSearchParams<{
-    id: string;
+  const { name, description, image, updated_at } = useLocalSearchParams<{
+    id?: string;
     name: string;
     description: string;
     image: string;
     updated_at: string;
   }>();
-
-  useEffect(() => {
-    logInfo('Экран новости открыт', {
-      id,
-      name,
-      updated_at,
-    });
-  }, [id, name, updated_at]);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>

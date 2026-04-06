@@ -1,3 +1,5 @@
+import * as Clipboard from 'expo-clipboard';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { clearLogs, useLogs } from '@/services/logs';
 
@@ -12,9 +14,22 @@ function formatTimestamp(timestamp: string) {
   });
 }
 
+function buildLogText(title: string, timestamp: string, details?: string) {
+  return [`[${formatTimestamp(timestamp)}] ERROR`, title, details].filter(Boolean).join('\n\n');
+}
+
 export default function LogsScreen() {
   const logs = useLogs();
   const hasLogs = logs.length > 0;
+  const [copiedLogId, setCopiedLogId] = useState<string | null>(null);
+
+  async function handleCopy(logId: string, title: string, timestamp: string, details?: string) {
+    await Clipboard.setStringAsync(buildLogText(title, timestamp, details));
+    setCopiedLogId(logId);
+    setTimeout(() => {
+      setCopiedLogId((current) => (current === logId ? null : current));
+    }, 1800);
+  }
 
   return (
     <View style={styles.container}>
@@ -33,32 +48,27 @@ export default function LogsScreen() {
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>Пока пусто</Text>
           <Text style={styles.emptyText}>
-            Здесь появятся действия пользователя, сетевые запросы, ответы и ошибки.
+            Здесь появятся только ошибки с подробными данными для диагностики.
           </Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
           {logs.map((log) => (
-            <View
-              key={log.id}
-              style={[
-                styles.card,
-                log.level === 'error' ? styles.cardError : styles.cardInfo,
-              ]}
-            >
+            <View key={log.id} style={[styles.card, styles.cardError]}>
               <View style={styles.cardHeader}>
-                <Text
-                  style={[
-                    styles.level,
-                    log.level === 'error' ? styles.levelError : styles.levelInfo,
-                  ]}
-                >
-                  {log.level === 'error' ? 'ERROR' : 'INFO'}
-                </Text>
+                <Text style={[styles.level, styles.levelError]}>ERROR</Text>
                 <Text style={styles.timestamp}>{formatTimestamp(log.timestamp)}</Text>
               </View>
               <Text style={styles.logTitle}>{log.title}</Text>
               {!!log.details && <Text style={styles.details}>{log.details}</Text>}
+              <Pressable
+                style={styles.copyButton}
+                onPress={() => handleCopy(log.id, log.title, log.timestamp, log.details)}
+              >
+                <Text style={styles.copyButtonText}>
+                  {copiedLogId === log.id ? 'Скопировано' : 'Копировать'}
+                </Text>
+              </Pressable>
             </View>
           ))}
         </ScrollView>
@@ -126,10 +136,6 @@ const styles = StyleSheet.create({
     padding: 14,
     borderWidth: 1,
   },
-  cardInfo: {
-    backgroundColor: '#ffffff',
-    borderColor: '#d5dde5',
-  },
   cardError: {
     backgroundColor: '#fff4f4',
     borderColor: '#f1b3b3',
@@ -145,9 +151,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.6,
-  },
-  levelInfo: {
-    color: '#176087',
   },
   levelError: {
     color: '#b42318',
@@ -169,5 +172,18 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: '#38424c',
     fontFamily: 'monospace',
+  },
+  copyButton: {
+    alignSelf: 'flex-start',
+    marginTop: 12,
+    backgroundColor: '#18212b',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  copyButtonText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

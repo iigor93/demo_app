@@ -1,55 +1,131 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import MapView, { Marker, Region } from 'react-native-maps';
+import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import type { CoordinatePoint } from '@/services/api';
 import { loadCoordinates, useCoordinates } from '@/services/coordinates-store';
-import { logInfo } from '@/services/logs';
 
-const DEFAULT_REGION: Region = {
+const DEFAULT_REGION = {
   latitude: 55.751244,
   longitude: 37.618423,
-  latitudeDelta: 25,
-  longitudeDelta: 25,
+  zoom: 4,
 };
 
-function buildRegion(points: CoordinatePoint[]): Region {
+function buildMapHtml(points: CoordinatePoint[]) {
+  const serializedPoints = encodeURIComponent(JSON.stringify(points));
+  const serializedDefaultRegion = encodeURIComponent(JSON.stringify(DEFAULT_REGION));
+
+  return `<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <style>
+      html, body, #map {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      body {
+        background: #d7e3ea;
+      }
+
+      .leaflet-container {
+        font-family: sans-serif;
+        background: #d7e3ea;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script>
+      const points = JSON.parse(decodeURIComponent('${serializedPoints}'));
+      const defaultRegion = JSON.parse(decodeURIComponent('${serializedDefaultRegion}'));
+      const map = L.map('map', {
+        zoomControl: false,
+        attributionControl: true,
+      });
+
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors',
+      }).addTo(map);
+
+      const bounds = [];
+
+      points.forEach((point) => {
+        const marker = L.marker([point.lat, point.lon]).addTo(map);
+        bounds.push([point.lat, point.lon]);
+        marker.on('click', () => {
+          window.ReactNativeWebView.postMessage(
+            JSON.stringify({ type: 'selectPoint', pointId: point.id })
+          );
+        });
+      });
+
+      map.on('click', () => {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'clearSelection' }));
+      });
+
+      if (bounds.length > 0) {
+        map.fitBounds(bounds, { padding: [32, 32] });
+      } else {
+        map.setView([defaultRegion.latitude, defaultRegion.longitude], defaultRegion.zoom);
+      }
+    </script>
+  </body>
+</html>`;
+}
+
+function buildWebViewKey(points: CoordinatePoint[]) {
   if (points.length === 0) {
-    return DEFAULT_REGION;
+    return 'empty-map';
   }
 
-  const latitudes = points.map((point) => point.lat);
-  const longitudes = points.map((point) => point.lon);
-  const minLat = Math.min(...latitudes);
-  const maxLat = Math.max(...latitudes);
-  const minLon = Math.min(...longitudes);
-  const maxLon = Math.max(...longitudes);
+  return points.map((point) => `${point.id}:${point.lat}:${point.lon}`).join('|');
+}
 
-  return {
-    latitude: (minLat + maxLat) / 2,
-    longitude: (minLon + maxLon) / 2,
-    latitudeDelta: Math.max((maxLat - minLat) * 1.7, 0.08),
-    longitudeDelta: Math.max((maxLon - minLon) * 1.7, 0.08),
-  };
+function isPointMessage(
+  payload: unknown,
+): payload is { type: 'selectPoint'; pointId: string } | { type: 'clearSelection' } {
+  if (!payload || typeof payload !== 'object' || !('type' in payload)) {
+    return false;
+  }
+
+  if (payload.type === 'clearSelection') {
+    return true;
+  }
+
+  return payload.type === 'selectPoint' && 'pointId' in payload && typeof payload.pointId === 'string';
 }
 
 export default function MapScreen() {
   const { points, isLoading, hasLoaded } = useCoordinates();
-  const mapRef = useRef<MapView | null>(null);
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
+  const [isMapReady, setIsMapReady] = useState(false);
 
   const selectedPoint = points.find((point) => point.id === selectedPointId) ?? null;
+  const mapHtml = buildMapHtml(points);
+  const webViewKey = buildWebViewKey(points);
 
   useEffect(() => {
-    logInfo('Экран карты открыт');
-  }, []);
-
-  useEffect(() => {
-    if (!hasLoaded || points.length === 0 || !mapRef.current) {
-      return;
-    }
-
-    mapRef.current.animateToRegion(buildRegion(points), 600);
-  }, [hasLoaded, points]);
+    setIsMapReady(false);
+  }, [webViewKey]);
 
   useEffect(() => {
     if (selectedPointId && !points.some((point) => point.id === selectedPointId)) {
@@ -57,34 +133,39 @@ export default function MapScreen() {
     }
   }, [points, selectedPointId]);
 
+  function handleMapMessage(event: WebViewMessageEvent) {
+    try {
+      const payload: unknown = JSON.parse(event.nativeEvent.data);
+
+      if (!isPointMessage(payload)) {
+        return;
+      }
+
+      if (payload.type === 'clearSelection') {
+        setSelectedPointId(null);
+        return;
+      }
+
+      setSelectedPointId(payload.pointId);
+    } catch {
+      setSelectedPointId(null);
+    }
+  }
+
   return (
     <View style={styles.container}>
-      <MapView
-        ref={mapRef}
+      <WebView
+        key={webViewKey}
         style={styles.map}
-        initialRegion={buildRegion(points)}
-        onPress={() => setSelectedPointId(null)}
-      >
-        {points.map((point) => (
-          <Marker
-            key={point.id}
-            coordinate={{
-              latitude: point.lat,
-              longitude: point.lon,
-            }}
-            pinColor={selectedPointId === point.id ? '#c2410c' : '#0f766e'}
-            onPress={() => {
-              setSelectedPointId(point.id);
-              logInfo('Пользователь выбрал точку на карте', {
-                id: point.id,
-                name: point.name,
-              });
-            }}
-          />
-        ))}
-      </MapView>
+        originWhitelist={['*']}
+        source={{ html: mapHtml }}
+        onMessage={handleMapMessage}
+        onLoadEnd={() => setIsMapReady(true)}
+        javaScriptEnabled
+        domStorageEnabled
+      />
 
-      {isLoading && !hasLoaded ? (
+      {(isLoading && !hasLoaded) || !isMapReady ? (
         <View style={styles.infoPanel} pointerEvents="none">
           <ActivityIndicator size="large" color="#0f766e" />
           <Text style={styles.infoText}>Загружаем точки на карте...</Text>
@@ -94,7 +175,9 @@ export default function MapScreen() {
       {!isLoading && hasLoaded && points.length === 0 ? (
         <View style={styles.infoPanel} pointerEvents="none">
           <Text style={styles.emptyTitle}>Точек пока нет</Text>
-          <Text style={styles.emptyText}>Когда бэкенд вернет координаты, они появятся здесь.</Text>
+          <Text style={styles.emptyText}>
+            Когда бэкенд вернет координаты, они появятся здесь.
+          </Text>
         </View>
       ) : null}
 
@@ -125,6 +208,7 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+    backgroundColor: '#d7e3ea',
   },
   infoPanel: {
     position: 'absolute',

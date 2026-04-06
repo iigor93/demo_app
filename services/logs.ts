@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
-export type LogLevel = 'info' | 'error';
+export type LogLevel = 'error';
 
 export interface LogEntry {
   id: string;
@@ -25,6 +25,18 @@ function stringifyPayload(payload: unknown): string | undefined {
     return undefined;
   }
 
+  if (payload instanceof Error) {
+    return JSON.stringify(
+      {
+        name: payload.name,
+        message: payload.message,
+        stack: payload.stack,
+      },
+      null,
+      2,
+    );
+  }
+
   if (typeof payload === 'string') {
     return payload;
   }
@@ -47,10 +59,6 @@ export function addLog(level: LogLevel, title: string, payload?: unknown) {
 
   entries = [nextEntry, ...entries].slice(0, MAX_LOG_ENTRIES);
   emitChange();
-}
-
-export function logInfo(title: string, payload?: unknown) {
-  addLog('info', title, payload);
 }
 
 export function logError(title: string, payload?: unknown) {
