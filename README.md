@@ -20,6 +20,7 @@
 - expo-clipboard
 - react-native-webview
 - OpenStreetMap + Leaflet внутри `WebView`
+- CARTO raster tiles style `rastertiles/voyager`
 
 ## Запуск проекта
 
@@ -85,13 +86,14 @@ npx expo start --clear
 - точки загружаются после первичных UI interactions
 - карта построена на `OpenStreetMap`
 - рендер карты идет через `Leaflet` внутри `react-native-webview`
+- базовая подложка использует `CARTO rastertiles/voyager`
 - по нажатию на маркер открывается карточка с названием и описанием точки
 - по нажатию на свободную область карты карточка скрывается
 - есть ручная кнопка обновления точек
 
 Важно:
 - для работы карты устройству нужен доступ к `unpkg.com`
-- для загрузки тайлов нужен доступ к `tile.openstreetmap.org`
+- для загрузки тайлов нужен доступ к `basemaps.cartocdn.com`
 
 ## Сеть и ошибки
 

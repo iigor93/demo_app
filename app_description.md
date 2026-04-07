@@ -17,6 +17,7 @@
 - @react-native-community/datetimepicker
 - react-native-webview
 - OpenStreetMap + Leaflet внутри `WebView`
+- CARTO raster tiles style `rastertiles/voyager`
 
 ## Структура маршрутов
 - `app/_layout.tsx`
@@ -31,7 +32,7 @@
 - `app/(tabs)/index.tsx`
   Главный экран. Загружает баннеры и новости с API, поддерживает pull-to-refresh.
 - `app/(tabs)/map.tsx`
-  Экран карты. Показывает карту OpenStreetMap через `react-native-webview`, размещает точки по координатам, открывает карточку выбранной точки и позволяет вручную обновить точки.
+  Экран карты. Показывает карту OpenStreetMap через `react-native-webview`, использует Leaflet и CARTO raster tiles style `rastertiles/voyager`, размещает точки по координатам, открывает карточку выбранной точки и позволяет вручную обновить точки.
 - `app/(tabs)/logs.tsx`
   Экран просмотра внутренних логов приложения. Показывает только ошибки и умеет копировать текст конкретной записи в буфер обмена.
 - `app/news/[id].tsx`
@@ -111,7 +112,8 @@ In-memory логгер без внешнего хранилища.
 - Точки карты загружаются с backend не мгновенно на самом старте, а после первичных UI interactions.
 - Карта построена на `OpenStreetMap` и `Leaflet`, которые рендерятся внутри `WebView`.
 - Leaflet подключается по сети с `unpkg.com`.
-- Тайлы карты загружаются с `tile.openstreetmap.org`.
+- Подложка карты загружается с `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png`.
+- Атрибуция карты показывает `OpenMapTiles` и `OpenStreetMap contributors`.
 - По нажатию на маркер показывается карточка с `name` и `description`.
 - По нажатию на свободную область карты карточка скрывается.
 - Экран карты умеет:
@@ -141,7 +143,7 @@ In-memory логгер без внешнего хранилища.
 ## Зависимости от окружения
 - В `services/api.ts` используется `EXPO_PUBLIC_API_BASE_URL`.
 - `BASE_URL` нормализуется удалением завершающего `/`.
-- Для экрана карты нужен доступ устройства к `unpkg.com` и `tile.openstreetmap.org`, иначе карта не отрисуется даже при рабочем backend API.
+- Для экрана карты нужен доступ устройства к `unpkg.com` и `basemaps.cartocdn.com`, иначе карта не отрисуется даже при рабочем backend API.
 
 ## Архитектурные особенности
 - Это не Redux/Zustand/MobX-приложение.
@@ -167,7 +169,7 @@ In-memory логгер без внешнего хранилища.
 - что возвращают `/api/v1/banners`, `/api/v1/news`, `/api/v1/coordinates`
 - не показывается ли `GlobalErrorBanner`
 - что пишется во вкладке `Logs`
-- есть ли доступ к `unpkg.com` и `tile.openstreetmap.org`
+- есть ли доступ к `unpkg.com` и `basemaps.cartocdn.com`
 - какие `mostLikelyCauseRu` и `summaryRu` попали в error-лог
 
 ## Сборка APK через Expo EAS
