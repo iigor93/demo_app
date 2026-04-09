@@ -1,12 +1,13 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
-import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function Screen2() {
   const [text, setText] = useState('');
   const [date, setDate] = useState(new Date());
   const [showCalendar, setShowCalendar] = useState(false);
   const [showSpinner, setShowSpinner] = useState(false);
+  const [showTestModal, setShowTestModal] = useState(false);
 
   const formatDate = (d: Date) =>
     d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -69,6 +70,29 @@ export default function Screen2() {
           />
         )}
       </View>
+
+      <View style={styles.block}>
+        <Text style={styles.label}>Модальное окно</Text>
+        <TouchableOpacity style={styles.button} onPress={() => setShowTestModal(true)}>
+          <Text style={styles.buttonText}>Тест</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Modal
+        visible={showTestModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowTestModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalText}>Привет это модальное окно</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={() => setShowTestModal(false)}>
+              <Text style={styles.modalButtonText}>Закрыть</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -116,5 +140,41 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     color: '#333',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 360,
+    minHeight: '30%',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 24,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 20,
+  },
+  modalText: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: '#222',
+  },
+  modalButton: {
+    width: '100%',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: '#1f6feb',
+  },
+  modalButtonText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '600',
   },
 });

@@ -173,3 +173,4 @@ npx eas build --platform android --profile preview
 - Экран карты больше не зависит от Google Maps SDK и billing в Google Cloud
 - Детали новости открываются без повторного API-запроса, через параметры навигации
 - Если что-то пошло не так, сначала стоит проверить `Logs` внутри приложения и `GlobalErrorBanner`
+- Если в `app_description.md` добавляются новые важные изменения или заметки, их нужно кратко отражать и здесь, в `README.md`
