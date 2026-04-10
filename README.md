@@ -9,16 +9,30 @@
 - экран внутренних логов приложения
 - вспомогательный demo-экран
 
+На demo-экране `Экран 2` сейчас есть:
+- текстовое поле
+- выбор даты
+- выбор времени
+- обычное модальное окно
+- большое модальное окно в формате bottom sheet
+
+Новое большое модальное окно на `Экран 2`:
+- открывается отдельной кнопкой
+- выезжает снизу
+- занимает почти весь экран
+- оставляет сверху затемненную область с видимым фоном
+- закрывается по крестику, по кнопке, по фону и свайпом вниз за верхнюю ручку
+
 ## Стек
 
 - Expo SDK 54
 - React 19
 - React Native 0.81
 - TypeScript
-- expo-router
-- expo-image
-- expo-clipboard
-- react-native-webview
+- `expo-router`
+- `expo-image`
+- `expo-clipboard`
+- `react-native-webview`
 - OpenStreetMap + Leaflet внутри `WebView`
 - CARTO raster tiles style `rastertiles/voyager`
 
@@ -108,6 +122,7 @@ npx expo start --clear
 - `app/_layout.tsx` - корневой layout, `StatusBar`, ранняя загрузка координат
 - `app/(tabs)/_layout.tsx` - нижние табы приложения
 - `app/(tabs)/index.tsx` - главный экран новостей
+- `app/(tabs)/explore.tsx` - demo-экран и примеры модальных окон
 - `app/(tabs)/map.tsx` - экран карты
 - `app/(tabs)/logs.tsx` - экран логов
 - `app/news/[id].tsx` - экран деталей новости

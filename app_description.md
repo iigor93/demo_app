@@ -10,12 +10,12 @@
 - React 19
 - React Native 0.81
 - TypeScript
-- expo-router
-- expo-image
-- expo-clipboard
-- react-native-safe-area-context
-- @react-native-community/datetimepicker
-- react-native-webview
+- `expo-router`
+- `expo-image`
+- `expo-clipboard`
+- `react-native-safe-area-context`
+- `@react-native-community/datetimepicker`
+- `react-native-webview`
 - OpenStreetMap + Leaflet внутри `WebView`
 - CARTO raster tiles style `rastertiles/voyager`
 
@@ -31,6 +31,23 @@
   - `logs`: просмотр внутренних логов
 - `app/(tabs)/index.tsx`
   Главный экран. Загружает баннеры и новости с API, поддерживает pull-to-refresh.
+- `app/(tabs)/explore.tsx`
+  Demo-экран для UI-примеров. Сейчас на нем есть:
+  - текстовое поле
+  - выбор даты
+  - выбор времени
+  - обычное модальное окно
+  - большое модальное окно в формате bottom sheet
+
+  Bottom sheet на `Экран 2`:
+  - открывается отдельной кнопкой
+  - выезжает снизу
+  - занимает почти весь экран
+  - оставляет сверху затемненную область, через которую виден фон
+  - закрывается по крестику
+  - закрывается по кнопке внутри
+  - закрывается по нажатию на затемненный фон
+  - поддерживает закрытие свайпом вниз за верхнюю ручку
 - `app/(tabs)/map.tsx`
   Экран карты. Показывает карту OpenStreetMap через `react-native-webview`, использует Leaflet и CARTO raster tiles style `rastertiles/voyager`, размещает точки по координатам, открывает карточку выбранной точки и позволяет вручную обновить точки.
 - `app/(tabs)/logs.tsx`
@@ -152,17 +169,19 @@ In-memory логгер без внешнего хранилища.
 - Главный экран специально использует `Promise.allSettled`, чтобы отказ одного запроса не ломал второй.
 - Сетевые сбои можно показывать из любого места через `services/global-banner.ts`.
 - Карта больше не зависит от Google Maps SDK и billing в Google Cloud.
+- `Экран 2` используется как площадка для проверки и демонстрации интерактивных UI-паттернов.
 
 ## Практические заметки для новой сессии
 Разбор проекта лучше начинать с:
 1. `app/_layout.tsx`
 2. `app/(tabs)/_layout.tsx`
 3. `app/(tabs)/index.tsx`
-4. `app/(tabs)/map.tsx`
-5. `services/api.ts`
-6. `services/coordinates-store.ts`
-7. `services/logs.ts`
-8. `services/global-banner.ts`
+4. `app/(tabs)/explore.tsx`
+5. `app/(tabs)/map.tsx`
+6. `services/api.ts`
+7. `services/coordinates-store.ts`
+8. `services/logs.ts`
+9. `services/global-banner.ts`
 
 Если что-то не грузится, сначала проверить:
 - задан ли `EXPO_PUBLIC_API_BASE_URL`
@@ -171,6 +190,12 @@ In-memory логгер без внешнего хранилища.
 - что пишется во вкладке `Logs`
 - есть ли доступ к `unpkg.com` и `basemaps.cartocdn.com`
 - какие `mostLikelyCauseRu` и `summaryRu` попали в error-лог
+
+Если не работает UI-пример с модальным окном на `Экран 2`, проверить:
+- открывается ли `app/(tabs)/explore.tsx`
+- не сломаны ли жесты или `Animated`-анимации
+- отрабатывает ли `onRequestClose`
+- не перекрыта ли верхняя ручка другим элементом
 
 ## Сборка APK через Expo EAS
 - Проект уже подключен к EAS Build и использует `eas.json`.
@@ -217,6 +242,6 @@ npx eas build --platform android --profile preview
 - Описание текущей схемы сборки и версионирования
 
 ## Актуальность описания
-- Описание актуализировано по состоянию на 2026-04-06.
-- Если меняются табы, маршруты, API-методы, формат данных, глобальные сервисы или процесс релиза, этот файл нужно обновлять в рамках той же задачи.
-- Если в `app_description.md` добавляются новые важные изменения или заметки, это же нужно отразить и в `README.md`, чтобы краткое и расширенное описания не расходились.
+- Описание актуализировано по состоянию на 2026-04-10.
+- Если меняются табы, маршруты, API-методы, формат данных, глобальные сервисы, demo-экран или процесс релиза, этот файл нужно обновлять в рамках той же задачи.
+- Если в `app_description.md` добавляются новые важные изменения или заметки, это же нужно отражать и в `README.md`, чтобы краткое и расширенное описания не расходились.
