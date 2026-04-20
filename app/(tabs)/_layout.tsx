@@ -3,7 +3,13 @@ import { Tabs } from 'expo-router';
 
 export default function TabLayout() {
   return (
-    <Tabs>
+    <Tabs
+      screenOptions={{
+        sceneStyle: {
+          backgroundColor: '#111111',
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -18,6 +24,7 @@ export default function TabLayout() {
         name="explore"
         options={{
           title: 'Экран 2',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="star" size={size} color={color} />
           ),

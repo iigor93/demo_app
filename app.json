@@ -4,6 +4,7 @@
     "slug": "demo_app",
     "version": "1.0.1",
     "orientation": "portrait",
+    "backgroundColor": "#111111",
     "icon": "./assets/images/icon.png",
     "scheme": "demoapp",
     "userInterfaceStyle": "automatic",
